@@ -1,0 +1,50 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: black;
+    color: white;
+    font-family: sans-serif;
+    margin: 1em;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.warning {
+    background-color: red;
+}
+
+.info,
+.info ~ hr,
+.controls {
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 1em;
+    max-width: 70ex;
+}
+
+.controls td:first-child {
+    text-align: right;
+    padding-right: 20px;
+}
+
+.controls button {
+    width: 100%;
+}
+
+.controls button,
+.controls input {
+    padding: 5px 10px;
+}
+
+.area {
+    border: solid 1px white;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}

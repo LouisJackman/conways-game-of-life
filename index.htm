@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="author" content="Louis Jackman">
+    <meta
+        name="description"
+        content="A simulation of Conway's Game of Life, within the browser.">
+    <meta
+        name="keywords"
+        content="conways game of life, conway's game of life">
+    <meta name="robots" content="NOFOLLOW">
+    <title>Conway's Game of Life</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <h1>Conway's Game of Life</h1>
+    <noscript>
+      <p class="info">
+        JavaScript wasn't detected yet is needed to run, specifically
+        ECMAScript 3rd Edition.
+      </p>
+    </noscript>
+    <p class="info">
+      Clicking a cell changes its state: dead to alive, alive to dead. The
+      simulation often kills cells as soon as they're spawned, so try pausing
+      whilst doing it.
+    </p>
+    <p class="info">
+      This simulation is entirely client-side; saving the page allows offline
+      use.
+    </p>
+    <hr>
+    <table class="controls">
+      <tr class="play-pause">
+        <td class="status"></td>
+        <td></td>
+        <td><button class="change"></button></td>
+      </tr>
+      <tr class="steps-per-second">
+        <td class="status"></td>
+        <td><input></input></td>
+        <td><button class="update">Update</button></td>
+      </tr>
+    </table>
+    <canvas class="area" width="600" height="400">
+      <p class="warning">
+        HTML5 Canvas support is required, but is not supported.
+      </p>
+    </canvas>
+    <script type="text/javascript" src="main.js"></script>
+    <noscript>
+      <p class="warning">
+        JavaScript support is required, but is not supported.
+      </p>
+    </noscript>
+  </body>
+</html>
+
