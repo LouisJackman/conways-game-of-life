@@ -1,426 +1,369 @@
-/*jslint browser: true */
+const {freeze, seal} = Object;
 
-var conwaysGameOfLife = (function () {
-    "use strict";
+export const fail = msg => {
+    throw new Error("Error: " + msg);
+};
 
-    var freeze = Object.freeze;
-    var seal = Object.seal;
+export const isDefined = x => x !== undefined;
 
-    var fail = function (msg) {
-        throw new Error("Error: " + msg);
-    };
+export const definedOr = (x, alternative) =>
+    isDefined(x)
+        ? x
+        : alternative;
 
-    var isDefined = function (x) { return x !== undefined; };
+export const createRange = (from, to) => {
+    const values = [];
+    for (; from <= to; ++from) {
+        values.push(from);
+    }
+    return values;
+};
 
-    var definedOr = function (x, alternative) {
-        return isDefined(x) ? x : alternative;
-    };
+export const repeatForcingOfThunk = (times, thunk) =>
+    createRange(1, times)
+        .map(() => thunk());
 
-    var createRange = function (from, to) {
-        var values = [];
+export const repeat = (times, value) =>
+    createRange(1, times)
+        .map(() => value);
 
-        for (; from <= to; from += 1) {
-            values.push(from);
-        }
-        return values;
-    };
+export const defaultAreaWidth = 30;
+export const defaultAreaHeight = 20;
 
-    var repeatForcingOfThunk = function (times, thunk) {
-        return createRange(1, times).map(function () {
-            return thunk();
-        });
-    };
-
-    var repeat = function (times, value) {
-        return createRange(1, times).map(function () {
-            return value;
-        });
-    };
-
-    var defaultAreaWidth = 30;
-    var defaultAreaHeight = 20;
-
-    var getContext = function (element) {
-        var context;
-
-        if (element === null) {
-            fail("the specified element was not found");
-        }
-
-        context = element.getContext("2d");
-
-        if (element === undefined) {
-            fail("2D context could not be acquired");
-        }
-
-        return context;
-    };
-
-    var area = (function () {
-        var amountOfNeighbours = function (position) {
-            var x = position.x;
-            var y = position.y;
-            var that = this;
-
-            var positions = freeze([
-                [x - 1, y - 1],
-                [x, y - 1],
-                [x + 1, y - 1],
-                [x - 1, y],
-                [x + 1, y],
-                [x - 1, y + 1],
-                [x, y + 1],
-                [x + 1, y + 1]
-            ]);
-
-            return positions.filter(function (neighbourPosition) {
-                var x = neighbourPosition[0];
-                var y = neighbourPosition[1];
-
-                return (
-                    (x > -1)
-                        && (x < that.width)
-                        && (y > -1)
-                        && (y < that.height)
-                        && that.isAlive({ x: x, y: y })
-                );
-            }).length;
-        };
-
-        var isUnderpopulated = function (position) {
-            return (
-                this.isAlive(position)
-                    && (this.amountOfNeighbours(position) < 2)
-            );
-        };
-
-        var isOverpopulated = function (position) {
-            return (
-                this.isAlive(position)
-                    && (this.amountOfNeighbours(position) > 3)
-            );
-        };
-
-        var isToBeSpawned = function (position) {
-            return (
-                !this.isAlive(position)
-                    && (this.amountOfNeighbours(position) === 3)
-            );
-        };
-
-        var stepSimulation = function () {
-            var that = this;
-            var toKill = [];
-            var toSpawn = [];
-            var height = this.height;
-            var width = this.width;
-            var y;
-            var x;
-            var position;
-
-            for (y = 0; y < height; y += 1) {
-                for (x = 0; x < width; x += 1) {
-                    position = { x: x, y: y };
-
-                    if (this.isUnderpopulated(position)
-                        || this.isOverpopulated(position)
-                    ) {
-                        toKill.push(position);
-                    } else if (this.isToBeSpawned(position)) {
-                        toSpawn.push(position);
-                    }
-                }
-            }
-            toKill.forEach(function (position) { that.kill(position); });
-            toSpawn.forEach(function (position) { that.spawn(position); });
-        };
-
-        return freeze({
-            amountOfNeighbours: amountOfNeighbours,
-            isUnderpopulated: isUnderpopulated,
-            isOverpopulated: isOverpopulated,
-            isToBeSpawned: isToBeSpawned,
-            stepSimulation: stepSimulation,
-        });
-    }());
-
-
-    var createArea = function (args) {
-        var obj = Object.create(area);
-
-        var rows = repeatForcingOfThunk(args.height, function () {
-            return repeat(args.width, false);
-        });
-
-        obj.width = args.width;
-        obj.height = args.height;
-        obj.cellWidth = args.cellWidth;
-        obj.cellHeight = args.cellHeight;
-
-        obj.isAlive = function (position) {
-            var x = position.x;
-            var y = position.y;
-
-            return rows[y][x];
-        };
-
-        obj.spawn = function () {
-            Array.prototype.slice.call(arguments).forEach(function (position) {
-                var x = position.x;
-                var y = position.y;
-
-                rows[y][x] = true;
-            });
-        };
-
-        obj.kill = function (position) {
-            var x = position.x;
-            var y = position.y;
-
-            rows[y][x] = false;
-        };
-
-        obj.spawn.apply(obj, args.initialCells);
-
-        return freeze(obj);
+export const getContext = element => {
+    if (element === null) {
+        fail("the specified element was not found");
     }
 
-    var setupControls = function (visualisation) {
-        var playPauseButtonText = document.createTextNode("Pause");
-        var playPauseAreaStatus = document.createTextNode(
-            "The simulation is playing."
-        );
-        var stepsPerSecondInputText = document.createTextNode(
-            "Running at 4 steps per second."
-        );
+    const context = element.getContext("2d");
+    if (context === undefined) {
+        fail("2D context could not be acquired");
+    }
 
-        var playPauseControlsStatus = document.querySelector(
-            ".controls .play-pause .status"
-        );
-        var playPauseButton = document.querySelector(
-            ".controls .play-pause .change"
-        );
-        var stepsPerSecondControlsStatus = document.querySelector(
-            ".controls .steps-per-second .status"
-        );
-        var stepsPerSecondInput = document.querySelector(
-            ".controls .steps-per-second input"
-        );
-        var stepsPerSecondButton = document.querySelector(
-            ".controls .steps-per-second .update"
+    return context;
+};
+
+const areaRows = Symbol();
+
+export class Area {
+
+    constructor({width, height, cellWidth, cellHeight, initialCells}) {
+        this.width = width;
+        this.height = height;
+        this.cellWidth = cellWidth;
+        this.cellHeight = cellHeight;
+
+        this[areaRows] = repeatForcingOfThunk(height, () =>
+            repeat(width, false)
         );
 
-        playPauseControlsStatus.appendChild(playPauseAreaStatus);
+        this.spawn(...initialCells);
+    }
 
-        playPauseButton.onclick = function () {
-            if (visualisation.isRunning) {
-                visualisation.pause();
-                playPauseButtonText.nodeValue = "Play";
-                playPauseAreaStatus.nodeValue = "The simulation is paused.";
-            } else {
-                visualisation.play();
-                playPauseButtonText.nodeValue = "Pause";
-                playPauseAreaStatus.nodeValue = "The simulation is playing.";
-            }
-        };
-        playPauseButton.appendChild(playPauseButtonText);
-
-        stepsPerSecondControlsStatus.appendChild(stepsPerSecondInputText);
-
-        stepsPerSecondButton.onclick = function () {
-            var input = +(stepsPerSecondInput.value);
-
-            stepsPerSecondInput.value = "";
-            visualisation.setStepsPerSecond(input);
-            stepsPerSecondInputText.nodeValue = (
-                "Running at "
-                    + input
-                    + " Steps per Second"
-            );
-        };
-    };
-
-    var createAreaPainter = function (args) {
-        var area = args.area;
-        var context = args.context;
-
-        var width = area.width;
-        var height = area.height;
-        var cellWidth = area.cellWidth;
-        var cellHeight = area.cellHeight;
-        var aliveColor = "white";
-        var deadColor = "black";
-
-        var paintTile = function (position) {
-            context.fillStyle = area.isAlive(position) ? aliveColor : deadColor;
-            context.fillRect(
-                cellWidth * position.x,
-                cellHeight * position.y,
-                cellWidth,
-                cellHeight
-            );
-        };
-
-        var paintAllTiles = function () {
-            var y;
-            var x;
-
-            for (y = 0; y < height; y += 1) {
-                for (x = 0; x < width; x += 1) {
-                    paintTile({ x: x, y: y });
-                }
-            }
-        };
-
-        return freeze({
-            paintTile: paintTile,
-            paintAllTiles: paintAllTiles,
+    spawn(...positions) {
+        positions.forEach(({x, y}) => {
+            this[areaRows][y][x] = true
         });
     }
 
-    var createCanvasMouseDownListener = function (args) {
-        var area = args.area;
-        var areaPainter = args.areaPainter;
-        var canvas = args.canvas;
+    kill({x, y}) {
+        this[areaRows][y][x] = false;
+    }
 
-        return function (event) {
-            var position;
-            var x;
-            var y;
+    isAlive({x, y}) {
+        return this[areaRows][y][x];
+    }
 
-            if (event.x === undefined) {
-                x = (
-                    event.clientX
-                        + document.body.scrollLeft
-                        + document.documentElement.scrollLeft
-                );
-                y = (
-                    event.clientY
-                        + document.body.scrollTop
-                        + document.documentElement.scrollTop
-                );
-            } else {
-                x = event.x;
-                y = event.y;
+    amountOfNeighbours({x, y}) {
+        const positions = freeze([
+            [x - 1, y - 1],
+            [x, y - 1],
+            [x + 1, y - 1],
+            [x - 1, y],
+            [x + 1, y],
+            [x - 1, y + 1],
+            [x, y + 1],
+            [x + 1, y + 1]
+        ]);
+
+        const neighbours = positions.filter(([x, y]) =>
+            (x > -1)
+                && (x < this.width)
+                && (y > -1)
+                && (y < this.height)
+                && this.isAlive({ x, y })
+        );
+        return neighbours.length;
+    }
+
+    isUnderpopulated(position) {
+        return (
+            this.isAlive(position)
+                && (this.amountOfNeighbours(position) < 2)
+        );
+    }
+
+    isOverpopulated(position) {
+        return (
+            this.isAlive(position)
+                && (3 < this.amountOfNeighbours(position))
+        );
+    }
+
+    isToBeSpawned(position) {
+        return (
+            !this.isAlive(position)
+                && (this.amountOfNeighbours(position) === 3)
+        );
+    }
+
+    stepSimulation() {
+        const toKill = [];
+        const toSpawn = [];
+        const {height, width} = this;
+
+        for (let y = 0; y < height; ++y) {
+            for (let x = 0; x < width; ++x) {
+                const position = { x, y };
+
+                if (this.isUnderpopulated(position)
+                    || this.isOverpopulated(position)
+                ) {
+                    toKill.push(position);
+                } else if (this.isToBeSpawned(position)) {
+                    toSpawn.push(position);
+                }
             }
+        }
 
-            x = Math.floor(
-                (x - event.target.offsetLeft)
-                    / area.cellWidth
-            );
-            y = Math.floor(
-                (y - event.target.offsetTop)
-                    / area.cellHeight
-            );
+        toKill.forEach(position => this.kill(position));
+        toSpawn.forEach(position => this.spawn(position));
+    }
+}
 
-            position = {x: x, y: y};
-            area.spawn(position);
-            areaPainter.paintTile(position);
-        };
+export const setupControls = visualisation => {
+    const playPauseButtonText = document.createTextNode("Pause");
+    const playPauseAreaStatus = document.createTextNode(
+        "The simulation is playing."
+    );
+    const stepsPerSecondInputText = document.createTextNode(
+        "Running at 4 steps per second."
+    );
+
+    const playPauseControlsStatus = document.querySelector(
+        ".controls .play-pause .status"
+    );
+    const playPauseButton = document.querySelector(
+        ".controls .play-pause .change"
+    );
+    const stepsPerSecondControlsStatus = document.querySelector(
+        ".controls .steps-per-second .status"
+    );
+    const stepsPerSecondInput = document.querySelector(
+        ".controls .steps-per-second input"
+    );
+    const stepsPerSecondButton = document.querySelector(
+        ".controls .steps-per-second .update"
+    );
+
+    playPauseControlsStatus.appendChild(playPauseAreaStatus);
+
+    playPauseButton.addEventListener("click", () => {
+        if (visualisation.isRunning) {
+            visualisation.pause();
+            playPauseButtonText.nodeValue = "Play";
+            playPauseAreaStatus.nodeValue = "The simulation is paused.";
+        } else {
+            visualisation.play();
+            playPauseButtonText.nodeValue = "Pause";
+            playPauseAreaStatus.nodeValue = "The simulation is playing.";
+        }
+    });
+    playPauseButton.appendChild(playPauseButtonText);
+
+    stepsPerSecondControlsStatus.appendChild(stepsPerSecondInputText);
+
+    stepsPerSecondButton.addEventListener("click", () => {
+        const input = +(stepsPerSecondInput.value);
+
+        stepsPerSecondInput.value = "";
+        visualisation.stepsPerSecond = input;
+        stepsPerSecondInputText.nodeValue = `Running at ${input} Steps per Seconds`;
+    });
+};
+
+const aliveColor = "white";
+const deadColor = "black";
+
+export class AreaPainter {
+
+    constructor({area, context}) {
+        const {width, height, cellWidth, cellHeight} = area;
+
+        this.area = area;
+        this.context = context;
+
+        this.width = width;
+        this.height = height;
+        this.cellWidth = cellWidth;
+        this.cellHeight = cellHeight;
+    }
+
+    paintTile(position) {
+        const {x, y} = position;
+
+        this.context.fillStyle = this.area.isAlive(position)
+            ? aliveColor
+            : deadColor;
+
+        this.context.fillRect(
+            this.cellWidth * x,
+            this.cellHeight * y,
+            this.cellWidth,
+            this.cellHeight
+        );
+    }
+
+    paintAllTiles() {
+        for (let y = 0; y < this.height; ++y) {
+            for (let x = 0; x < this.width; ++x) {
+                this.paintTile({x, y});
+            }
+        }
+    }
+}
+
+export const getMouseDownPositions = event => {
+    let x;
+    let y;
+    if (event.x === undefined) {
+        x = (
+            event.clientX
+                + document.body.scrollLeft
+                + document.documentElement.scrollLeft
+        );
+        y = (
+            event.clientY
+                + document.body.scrollTop
+                + document.documentElement.scrollTop
+        );
+    } else {
+        x = event.x;
+        y = event.y;
+    }
+    return [x, y];
+};
+
+export const createCanvasMouseDownListener = ({area, areaPainter, canvas}) =>
+    event => {
+        const [baseX, baseY] = getMouseDownPositions(event);
+
+        const x = Math.floor(
+            (baseX - event.target.offsetLeft)
+                / area.cellWidth
+        );
+        const y = Math.floor(
+            (baseY - event.target.offsetTop)
+                / area.cellHeight
+        );
+
+        const position = {x, y};
+        area.spawn(position);
+        areaPainter.paintTile(position);
     };
 
-    var createVisualisation = function (args) {
-        var obj = {};
+export class Visualisation {
 
-        var onInconsistentPlayPauseState = function () {
-            fail("An inconsistent visualiser play/pause state has occured");
-        };
+    constructor({area, canvas, stepsPerSecond = 4}) {
+        this.area = area;
+        this.canvas = canvas;
 
-        var area = args.area;
-        var canvas = args.canvas;
-
-        var areaPainter = createAreaPainter({
-            area: area,
+        this.areaPainter = new AreaPainter({
+            area,
             context: getContext(canvas),
         });
 
-        var stepIntervalId;
-        var areaPainter;
-
-        var step = function () {
-            areaPainter.paintAllTiles();
-            area.stepSimulation();
-        };
-
-        var steps = definedOr(args.stepsPerSecond, 4);
-        var milisecondIntervalCount = (
-            1000 / (definedOr(args.stepsPerSecond, 4))
-        );
+        this.steps = stepsPerSecond;
+        this.milisecondIntervalCount = 1000 / stepsPerSecond;
 
         canvas.addEventListener(
             "mousedown",
             createCanvasMouseDownListener({
                 area: area,
-                areaPainter: areaPainter,
+                areaPainter: this.areaPainter,
                 canvas: canvas,
             })
         );
 
-        obj.isRunning = false;
+        this.isRunning = false;
 
-        obj.getStepsPerSecond = function () {
-            return steps;
-        };
+        setupControls(this);
+    }
 
-        obj.setStepsPerSecond = function (newSteps) {
-            steps = newSteps;
-            milisecondIntervalCount = 1000 / newSteps;
+    onInconsistentPlayPauseState() {
+        fail("An inconsistent visualiser play/pause state has occured");
+    }
 
-            if (this.isRunning) {
-                this.pause();
-                this.play();
-            }
-        };
+    step() {
+        this.areaPainter.paintAllTiles();
+        this.area.stepSimulation();
+    }
 
-        obj.play = function () {
-            if (this.isRunning) {
-                onInconsistentPlayPauseState();
-            } else {
-                stepIntervalId = setInterval(
-                        step,
-                        milisecondIntervalCount);
-                this.isRunning = true;
-            }
-        };
+    play() {
+        if (this.isRunning) {
+            this.onInconsistentPlayPauseState();
+        } else {
+            this.stepIntervalId = setInterval(
+                () => this.step(),
+                this.milisecondIntervalCount
+            );
+            this.isRunning = true;
+        }
+    }
 
-        obj.pause = function () {
-            if (!this.isRunning) {
-                onInconsistentPlayPauseState();
-            } else {
-                clearInterval(stepIntervalId);
-                this.isRunning = false;
-            }
-        };
+    pause() {
+        if (!this.isRunning) {
+            this.onInconsistentPlayPauseState();
+        } else {
+            clearInterval(this.stepIntervalId);
+            this.isRunning = false;
+        }
+    }
 
-        setupControls(obj);
+    get stepsPerSecond() {
+        return steps;
+    }
 
-        return seal(obj);
-    };
+    set stepsPerSecond(newSteps) {
+        this.steps = newSteps;
+        this.milisecondIntervalCount = 1000 / newSteps;
 
-    var main = function () {
-        createVisualisation({
-            area: createArea({
-                width: 80,
-                height: 40,
-                cellWidth: 10,
-                cellHeight: 10,
-                initialCells: [
-                    { x: 0, y: 2 },
-                    { x: 1, y: 2 },
-                    { x: 2, y: 2 },
-                    { x: 2, y: 1 },
-                    { x: 1, y: 0 }
-                ],
-            }),
-            canvas: document.querySelector(".area")
-        }).play();
-    };
+        if (this.isRunning) {
+            this.pause();
+            this.play();
+        }
+    }
+}
 
-    main();
-
-    return freeze({
-        createArea: createArea,
-        createVisualisation: createVisualisation,
+export const main = () => {
+    const visualisation = new Visualisation({
+        area: new Area({
+            width: 80,
+            height: 40,
+            cellWidth: 10,
+            cellHeight: 10,
+            initialCells: [
+                { x: 0, y: 2 },
+                { x: 1, y: 2 },
+                { x: 2, y: 2 },
+                { x: 2, y: 1 },
+                { x: 1, y: 0 }
+            ],
+        }),
+        canvas: document.querySelector(".area")
     });
-}());
+    visualisation.play();
+};
+
+main();
 
