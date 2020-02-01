@@ -252,25 +252,6 @@ export class AreaPainter {
   }
 }
 
-export const getMouseDownPositions = (event: MouseEvent) => {
-  let x;
-  let y;
-  if (event.x === undefined) {
-    x =
-      event.clientX +
-      document.body.scrollLeft +
-      document.documentElement.scrollLeft;
-    y =
-      event.clientY +
-      document.body.scrollTop +
-      document.documentElement.scrollTop;
-  } else {
-    x = event.x;
-    y = event.y;
-  }
-  return [x, y];
-};
-
 interface CreateCanvasMouseDownListenerArgs {
   area: Area;
   areaPainter: AreaPainter;
