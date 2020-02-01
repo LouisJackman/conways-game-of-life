@@ -1,4 +1,4 @@
-const { freeze, seal } = Object;
+const { freeze } = Object;
 
 export const isDefined = <T>(x: T) => x !== undefined;
 
@@ -33,8 +33,6 @@ export const getContext = (element: HTMLCanvasElement) => {
   }
   return context;
 };
-
-const areaRows = Symbol();
 
 interface Position {
   x: number;
@@ -276,17 +274,12 @@ export const getMouseDownPositions = (event: MouseEvent) => {
 interface CreateCanvasMouseDownListenerArgs {
   area: Area;
   areaPainter: AreaPainter;
-  canvas: HTMLCanvasElement;
 }
 
 export const createCanvasMouseDownListener = ({
   area,
   areaPainter,
-  canvas
 }: CreateCanvasMouseDownListenerArgs) => (event: MouseEvent) => {
-  const [baseX, baseY] = getMouseDownPositions(event);
-
-  const rect = (event.target! as HTMLElement).getBoundingClientRect();
   const x = Math.floor(event.offsetX / area.cellWidth);
   const y = Math.floor(event.offsetY / area.cellHeight);
 
@@ -328,7 +321,6 @@ export class Visualisation {
       createCanvasMouseDownListener({
         area: area,
         areaPainter: this.areaPainter,
-        canvas: canvas
       })
     );
 
