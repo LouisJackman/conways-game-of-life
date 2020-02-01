@@ -1,10 +1,5 @@
 const { freeze } = Object;
 
-export const isDefined = <T>(x: T) => x !== undefined;
-
-export const definedOr = <T, U>(x: T, alternative: U) =>
-  isDefined(x) ? x : alternative;
-
 export const createRange = (from: number, to: number) => {
   const values = [];
   for (; from <= to; ++from) {
