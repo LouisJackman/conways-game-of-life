@@ -1,14 +1,11 @@
 const { freeze, seal } = Object;
 
-export const fail = msg => {
-  throw new Error("Error: " + msg);
-};
+export const isDefined = <T>(x: T) => x !== undefined;
 
-export const isDefined = x => x !== undefined;
+export const definedOr = <T, U>(x: T, alternative: U) =>
+  isDefined(x) ? x : alternative;
 
-export const definedOr = (x, alternative) => (isDefined(x) ? x : alternative);
-
-export const createRange = (from, to) => {
+export const createRange = (from: number, to: number) => {
   const values = [];
   for (; from <= to; ++from) {
     values.push(from);
@@ -16,56 +13,82 @@ export const createRange = (from, to) => {
   return values;
 };
 
-export const repeatForcingOfThunk = (times, thunk) =>
+export const repeatForcingOfThunk = <T>(times: number, thunk: () => T) =>
   createRange(1, times).map(() => thunk());
 
-export const repeat = (times, value) => createRange(1, times).map(() => value);
+export const repeat = <T>(times: number, value: T) =>
+  createRange(1, times).map(() => value);
 
 export const defaultAreaWidth = 30;
 export const defaultAreaHeight = 20;
 
-export const getContext = element => {
+export const getContext = (element: HTMLCanvasElement) => {
   if (element === null) {
-    fail("the specified element was not found");
+    throw new Error("the specified element was not found");
   }
 
   const context = element.getContext("2d");
-  if (context === undefined) {
-    fail("2D context could not be acquired");
+  if (context === null) {
+    throw new Error("2D context could not be acquired");
   }
-
   return context;
 };
 
 const areaRows = Symbol();
 
+interface Position {
+  x: number;
+  y: number;
+}
+
+interface AreaArgs {
+  width: number;
+  height: number;
+  cellWidth: number;
+  cellHeight: number;
+  initialCells: Position[];
+}
+
 export class Area {
-  constructor({ width, height, cellWidth, cellHeight, initialCells }) {
+  readonly width: number;
+  readonly height: number;
+  readonly cellWidth: number;
+  readonly cellHeight: number;
+
+  private readonly areaRows: boolean[][];
+
+  constructor({
+    width,
+    height,
+    cellWidth,
+    cellHeight,
+    initialCells
+  }: AreaArgs) {
     this.width = width;
     this.height = height;
     this.cellWidth = cellWidth;
     this.cellHeight = cellHeight;
 
-    this[areaRows] = repeatForcingOfThunk(height, () => repeat(width, false));
+    this.areaRows = repeatForcingOfThunk(height, () => repeat(width, false));
 
     this.spawn(...initialCells);
   }
 
-  spawn(...positions) {
+  spawn(...positions: Position[]) {
     positions.forEach(({ x, y }) => {
-      this[areaRows][y][x] = true;
+      this.areaRows[y][x] = true;
     });
   }
 
-  kill({ x, y }) {
-    this[areaRows][y][x] = false;
+  kill({ x, y }: Position) {
+    this.areaRows[y][x] = false;
   }
 
-  isAlive({ x, y }) {
-    return this[areaRows][y][x];
+  isAlive({ x, y }: Position) {
+    return this.areaRows[y][x];
   }
 
-  amountOfNeighbours({ x, y }) {
+  amountOfNeighbours({ x, y }: Position) {
     const positions = freeze([
       [x - 1, y - 1],
       [x, y - 1],
@@ -88,15 +111,15 @@ export class Area {
     return neighbours.length;
   }
 
-  isUnderpopulated(position) {
+  isUnderpopulated(position: Position) {
     return this.isAlive(position) && this.amountOfNeighbours(position) < 2;
   }
 
-  isOverpopulated(position) {
+  isOverpopulated(position: Position) {
     return this.isAlive(position) && 3 < this.amountOfNeighbours(position);
   }
 
-  isToBeSpawned(position) {
+  isToBeSpawned(position: Position) {
     return !this.isAlive(position) && this.amountOfNeighbours(position) === 3;
   }
 
@@ -122,7 +145,15 @@ export class Area {
   }
 }
 
-export const setupControls = visualisation => {
+const querySelectorOrThrow = (query: string): Element => {
+  const element = document.querySelector(query);
+  if (element === null) {
+    throw new Error(`document query "${query}" yielded no results`);
+  }
+  return element;
+};
+
+export const setupControls = (visualisation: Visualisation) => {
   const playPauseButtonText = document.createTextNode("Pause");
   const playPauseAreaStatus = document.createTextNode(
     "The simulation is playing."
@@ -131,19 +162,17 @@ export const setupControls = visualisation => {
     "Running at 4 steps per second."
   );
 
-  const playPauseControlsStatus = document.querySelector(
+  const playPauseControlsStatus = querySelectorOrThrow(
     ".controls .play-pause .status"
   );
-  const playPauseButton = document.querySelector(
-    ".controls .play-pause .change"
-  );
-  const stepsPerSecondControlsStatus = document.querySelector(
+  const playPauseButton = querySelectorOrThrow(".controls .play-pause .change");
+  const stepsPerSecondControlsStatus = querySelectorOrThrow(
     ".controls .steps-per-second .status"
   );
-  const stepsPerSecondInput = document.querySelector(
+  const stepsPerSecondInput = querySelectorOrThrow(
     ".controls .steps-per-second input"
-  );
-  const stepsPerSecondButton = document.querySelector(
+  ) as HTMLInputElement;
+  const stepsPerSecondButton = querySelectorOrThrow(
     ".controls .steps-per-second .update"
   );
 
@@ -176,8 +205,20 @@ export const setupControls = visualisation => {
 const aliveColor = "white";
 const deadColor = "black";
 
+interface AreaPainterArgs {
+  area: Area;
+  context: CanvasRenderingContext2D;
+}
+
 export class AreaPainter {
-  constructor({ area, context }) {
+  readonly area: Area;
+  readonly context: CanvasRenderingContext2D;
+  readonly width: number;
+  readonly height: number;
+  readonly cellWidth: number;
+  readonly cellHeight: number;
+
+  constructor({ area, context }: AreaPainterArgs) {
     const { width, height, cellWidth, cellHeight } = area;
 
     this.area = area;
@@ -189,7 +230,7 @@ export class AreaPainter {
     this.cellHeight = cellHeight;
   }
 
-  paintTile(position) {
+  paintTile(position: Position) {
     const { x, y } = position;
 
     this.context.fillStyle = this.area.isAlive(position)
@@ -213,7 +254,7 @@ export class AreaPainter {
   }
 }
 
-export const getMouseDownPositions = event => {
+export const getMouseDownPositions = (event: MouseEvent) => {
   let x;
   let y;
   if (event.x === undefined) {
@@ -232,23 +273,45 @@ export const getMouseDownPositions = event => {
   return [x, y];
 };
 
+interface CreateCanvasMouseDownListenerArgs {
+  area: Area;
+  areaPainter: AreaPainter;
+  canvas: HTMLCanvasElement;
+}
+
 export const createCanvasMouseDownListener = ({
   area,
   areaPainter,
   canvas
-}) => event => {
+}: CreateCanvasMouseDownListenerArgs) => (event: MouseEvent) => {
   const [baseX, baseY] = getMouseDownPositions(event);
 
-  const x = Math.floor((baseX - event.target.offsetLeft) / area.cellWidth);
-  const y = Math.floor((baseY - event.target.offsetTop) / area.cellHeight);
+  const rect = (event.target! as HTMLElement).getBoundingClientRect();
+  const x = Math.floor(event.offsetX / area.cellWidth);
+  const y = Math.floor(event.offsetY / area.cellHeight);
 
   const position = { x, y };
   area.spawn(position);
   areaPainter.paintTile(position);
 };
 
+interface VisualisationArgs {
+  area: Area;
+  canvas: HTMLCanvasElement;
+  stepsPerSecond?: number;
+}
+
 export class Visualisation {
-  constructor({ area, canvas, stepsPerSecond = 4 }) {
+  readonly area: Area;
+  readonly canvas: HTMLCanvasElement;
+  readonly areaPainter: AreaPainter;
+
+  steps: number;
+  milisecondIntervalCount: number;
+  isRunning: boolean;
+  stepIntervalId?: number;
+
+  constructor({ area, canvas, stepsPerSecond = 4 }: VisualisationArgs) {
     this.area = area;
     this.canvas = canvas;
 
@@ -275,7 +338,7 @@ export class Visualisation {
   }
 
   onInconsistentPlayPauseState() {
-    fail("An inconsistent visualiser play/pause state has occured");
+    throw new Error("an inconsistent visualiser play/pause state has occured");
   }
 
   step() {
@@ -305,7 +368,7 @@ export class Visualisation {
   }
 
   get stepsPerSecond() {
-    return steps;
+    return this.steps;
   }
 
   set stepsPerSecond(newSteps) {
@@ -320,6 +383,8 @@ export class Visualisation {
 }
 
 export const main = () => {
+  const canvas = querySelectorOrThrow(".area") as HTMLCanvasElement;
+
   const visualisation = new Visualisation({
     area: new Area({
       width: 80,
@@ -334,7 +399,7 @@ export const main = () => {
         { x: 1, y: 0 }
       ]
     }),
-    canvas: document.querySelector(".area")
+    canvas
   });
   visualisation.play();
 };
