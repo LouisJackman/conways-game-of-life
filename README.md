@@ -2,7 +2,7 @@
 
 A in-browser implementation of [Conway's Game of
 Life](https://en.wikipedia.org/wiki/Conway's_Game_of_Life). View a
-[demo](https://volatilethunk.com/theme/projects/conways-game-of-life/index.htm).
+[demo](https://volatilethunk.com/projects/conways-game-of-life/index.html).
 
 This repository is hosted [on
 GitLab.com](https://gitlab.com/louis.jackman/conways-game-of-life). If you're
