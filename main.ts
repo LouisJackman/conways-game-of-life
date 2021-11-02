@@ -8,14 +8,15 @@ export const createRange = (from: number, to: number) => {
   return values;
 };
 
+const unreachable = (): never => {
+  throw new Error("unreachable code unexpectedly reached");
+};
+
 export const repeatForcingOfThunk = <T>(times: number, thunk: () => T) =>
   createRange(1, times).map(() => thunk());
 
 export const repeat = <T>(times: number, value: T) =>
   createRange(1, times).map(() => value);
-
-export const defaultAreaWidth = 30;
-export const defaultAreaHeight = 20;
 
 export const getContext = (element: HTMLCanvasElement) => {
   if (element === null) {
@@ -29,18 +30,18 @@ export const getContext = (element: HTMLCanvasElement) => {
   return context;
 };
 
-interface Position {
-  x: number;
-  y: number;
-}
+type Position = {
+  readonly x: number;
+  readonly y: number;
+};
 
-interface AreaArgs {
-  width: number;
-  height: number;
-  cellWidth: number;
-  cellHeight: number;
-  initialCells: Position[];
-}
+type AreaArgs = {
+  readonly width: number;
+  readonly height: number;
+  readonly cellWidth: number;
+  readonly cellHeight: number;
+  readonly initialCells: Position[];
+};
 
 export class Area {
   readonly width: number;
@@ -48,7 +49,7 @@ export class Area {
   readonly cellWidth: number;
   readonly cellHeight: number;
 
-  private readonly areaRows: boolean[][];
+  readonly #areaRows: boolean[][];
 
   constructor({
     width,
@@ -62,27 +63,40 @@ export class Area {
     this.cellWidth = cellWidth;
     this.cellHeight = cellHeight;
 
-    this.areaRows = repeatForcingOfThunk(height, () => repeat(width, false));
+    this.#areaRows = repeatForcingOfThunk(height, () => repeat(width, false));
 
     this.spawn(...initialCells);
   }
 
   spawn(...positions: Position[]) {
-    positions.forEach(({ x, y }) => {
-      this.areaRows[y][x] = true;
-    });
+    for (const { x, y } of positions) {
+      const row = this.#areaRows[y];
+      if (row === undefined) {
+        unreachable();
+      } else {
+        row[x] = true;
+      }
+    }
   }
 
   kill({ x, y }: Position) {
-    this.areaRows[y][x] = false;
+    const row = this.#areaRows[y];
+    if (row === undefined) {
+      unreachable();
+    } else {
+      row[x] = false;
+    }
   }
 
   isAlive({ x, y }: Position) {
-    return this.areaRows[y][x];
+    const row = this.#areaRows[y];
+    return (row === undefined)
+      ? unreachable()
+      : row[x];
   }
 
   amountOfNeighbours({ x, y }: Position) {
-    const positions = freeze([
+    const positions: Readonly<readonly [number, number][]> = freeze([
       [x - 1, y - 1],
       [x, y - 1],
       [x + 1, y - 1],
@@ -90,7 +104,7 @@ export class Area {
       [x + 1, y],
       [x - 1, y + 1],
       [x, y + 1],
-      [x + 1, y + 1]
+      [x + 1, y + 1],
     ]);
 
     const neighbours = positions.filter(
@@ -133,8 +147,12 @@ export class Area {
       }
     }
 
-    toKill.forEach(position => this.kill(position));
-    toSpawn.forEach(position => this.spawn(position));
+    for (const position of toKill) {
+      this.kill(position);
+    }
+    for (const position of toSpawn) {
+      this.spawn(position);
+    }
   }
 }
 
@@ -198,10 +216,10 @@ export const setupControls = (visualisation: Visualisation) => {
 const aliveColor = "white";
 const deadColor = "black";
 
-interface AreaPainterArgs {
-  area: Area;
-  context: CanvasRenderingContext2D;
-}
+type AreaPainterArgs = {
+  readonly area: Area;
+  readonly context: CanvasRenderingContext2D;
+};
 
 export class AreaPainter {
   readonly area: Area;
@@ -247,10 +265,10 @@ export class AreaPainter {
   }
 }
 
-interface CreateCanvasMouseDownListenerArgs {
-  area: Area;
-  areaPainter: AreaPainter;
-}
+type CreateCanvasMouseDownListenerArgs = {
+  readonly area: Area;
+  readonly areaPainter: AreaPainter;
+};
 
 export const createCanvasMouseDownListener = ({
   area,
@@ -264,11 +282,11 @@ export const createCanvasMouseDownListener = ({
   areaPainter.paintTile(position);
 };
 
-interface VisualisationArgs {
-  area: Area;
-  canvas: HTMLCanvasElement;
-  stepsPerSecond?: number;
-}
+type VisualisationArgs = {
+  readonly area: Area;
+  readonly canvas: HTMLCanvasElement;
+  readonly stepsPerSecond?: number;
+};
 
 export class Visualisation {
   readonly area: Area;
@@ -373,3 +391,4 @@ export const main = () => {
 };
 
 main();
+
