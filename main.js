@@ -1,6 +1,6 @@
 const { freeze } = Object;
 
-export const createRange = (from: number, to: number) => {
+export const createRange = (from, to) => {
   const values = [];
   for (; from <= to; ++from) {
     values.push(from);
@@ -8,17 +8,16 @@ export const createRange = (from: number, to: number) => {
   return values;
 };
 
-const unreachable = (): never => {
+const unreachable = () => {
   throw new Error("unreachable code unexpectedly reached");
 };
 
-export const repeatForcingOfThunk = <T>(times: number, thunk: () => T) =>
+export const repeatForcingOfThunk = (times, thunk) =>
   createRange(1, times).map(() => thunk());
 
-export const repeat = <T>(times: number, value: T) =>
-  createRange(1, times).map(() => value);
+export const repeat = (times, value) => createRange(1, times).map(() => value);
 
-export const getContext = (element: HTMLCanvasElement) => {
+export const getContext = (element) => {
   if (element === null) {
     throw new Error("the specified element was not found");
   }
@@ -30,34 +29,10 @@ export const getContext = (element: HTMLCanvasElement) => {
   return context;
 };
 
-type Position = {
-  readonly x: number;
-  readonly y: number;
-};
-
-type AreaArgs = {
-  readonly width: number;
-  readonly height: number;
-  readonly cellWidth: number;
-  readonly cellHeight: number;
-  readonly initialCells: Position[];
-};
-
 export class Area {
-  readonly width: number;
-  readonly height: number;
-  readonly cellWidth: number;
-  readonly cellHeight: number;
+  #areaRows;
 
-  readonly #areaRows: boolean[][];
-
-  constructor({
-    width,
-    height,
-    cellWidth,
-    cellHeight,
-    initialCells
-  }: AreaArgs) {
+  constructor({ width, height, cellWidth, cellHeight, initialCells }) {
     this.width = width;
     this.height = height;
     this.cellWidth = cellWidth;
@@ -68,35 +43,34 @@ export class Area {
     this.spawn(...initialCells);
   }
 
-  spawn(...positions: Position[]) {
+  spawn(...positions) {
     for (const { x, y } of positions) {
       const row = this.#areaRows[y];
       if (row === undefined) {
         unreachable();
-      } else {
-        row[x] = true;
       }
+      row[x] = true;
     }
   }
 
-  kill({ x, y }: Position) {
+  kill({ x, y }) {
     const row = this.#areaRows[y];
     if (row === undefined) {
       unreachable();
-    } else {
-      row[x] = false;
     }
+    row[x] = false;
   }
 
-  isAlive({ x, y }: Position) {
+  isAlive({ x, y }) {
     const row = this.#areaRows[y];
-    return (row === undefined)
-      ? unreachable()
-      : row[x];
+    if (row === undefined) {
+      unreachable();
+    }
+    return row[x];
   }
 
-  amountOfNeighbours({ x, y }: Position) {
-    const positions: Readonly<readonly [number, number][]> = freeze([
+  amountOfNeighbours({ x, y }) {
+    const positions = freeze([
       [x - 1, y - 1],
       [x, y - 1],
       [x + 1, y - 1],
@@ -118,15 +92,15 @@ export class Area {
     return neighbours.length;
   }
 
-  isUnderpopulated(position: Position) {
+  isUnderpopulated(position) {
     return this.isAlive(position) && this.amountOfNeighbours(position) < 2;
   }
 
-  isOverpopulated(position: Position) {
+  isOverpopulated(position) {
     return this.isAlive(position) && 3 < this.amountOfNeighbours(position);
   }
 
-  isToBeSpawned(position: Position) {
+  isToBeSpawned(position) {
     return !this.isAlive(position) && this.amountOfNeighbours(position) === 3;
   }
 
@@ -156,7 +130,7 @@ export class Area {
   }
 }
 
-const querySelectorOrThrow = (query: string): Element => {
+const querySelectorOrThrow = (query) => {
   const element = document.querySelector(query);
   if (element === null) {
     throw new Error(`document query "${query}" yielded no results`);
@@ -164,7 +138,7 @@ const querySelectorOrThrow = (query: string): Element => {
   return element;
 };
 
-export const setupControls = (visualisation: Visualisation) => {
+export const setupControls = (visualisation) => {
   const playPauseButtonText = document.createTextNode("Pause");
   const playPauseAreaStatus = document.createTextNode(
     "The simulation is playing."
@@ -182,7 +156,7 @@ export const setupControls = (visualisation: Visualisation) => {
   );
   const stepsPerSecondInput = querySelectorOrThrow(
     ".controls .steps-per-second input"
-  ) as HTMLInputElement;
+  );
   const stepsPerSecondButton = querySelectorOrThrow(
     ".controls .steps-per-second .update"
   );
@@ -216,20 +190,8 @@ export const setupControls = (visualisation: Visualisation) => {
 const aliveColor = "white";
 const deadColor = "black";
 
-type AreaPainterArgs = {
-  readonly area: Area;
-  readonly context: CanvasRenderingContext2D;
-};
-
 export class AreaPainter {
-  readonly area: Area;
-  readonly context: CanvasRenderingContext2D;
-  readonly width: number;
-  readonly height: number;
-  readonly cellWidth: number;
-  readonly cellHeight: number;
-
-  constructor({ area, context }: AreaPainterArgs) {
+  constructor({ area, context }) {
     const { width, height, cellWidth, cellHeight } = area;
 
     this.area = area;
@@ -241,7 +203,7 @@ export class AreaPainter {
     this.cellHeight = cellHeight;
   }
 
-  paintTile(position: Position) {
+  paintTile(position) {
     const { x, y } = position;
 
     this.context.fillStyle = this.area.isAlive(position)
@@ -265,46 +227,25 @@ export class AreaPainter {
   }
 }
 
-type CreateCanvasMouseDownListenerArgs = {
-  readonly area: Area;
-  readonly areaPainter: AreaPainter;
-};
+export const createCanvasMouseDownListener =
+  ({ area, areaPainter }) =>
+  (event) => {
+    const x = Math.floor(event.offsetX / area.cellWidth);
+    const y = Math.floor(event.offsetY / area.cellHeight);
 
-export const createCanvasMouseDownListener = ({
-  area,
-  areaPainter,
-}: CreateCanvasMouseDownListenerArgs) => (event: MouseEvent) => {
-  const x = Math.floor(event.offsetX / area.cellWidth);
-  const y = Math.floor(event.offsetY / area.cellHeight);
-
-  const position = { x, y };
-  area.spawn(position);
-  areaPainter.paintTile(position);
-};
-
-type VisualisationArgs = {
-  readonly area: Area;
-  readonly canvas: HTMLCanvasElement;
-  readonly stepsPerSecond?: number;
-};
+    const position = { x, y };
+    area.spawn(position);
+    areaPainter.paintTile(position);
+  };
 
 export class Visualisation {
-  readonly area: Area;
-  readonly canvas: HTMLCanvasElement;
-  readonly areaPainter: AreaPainter;
-
-  steps: number;
-  milisecondIntervalCount: number;
-  isRunning: boolean;
-  stepIntervalId?: number;
-
-  constructor({ area, canvas, stepsPerSecond = 4 }: VisualisationArgs) {
+  constructor({ area, canvas, stepsPerSecond = 4 }) {
     this.area = area;
     this.canvas = canvas;
 
     this.areaPainter = new AreaPainter({
       area,
-      context: getContext(canvas)
+      context: getContext(canvas),
     });
 
     this.steps = stepsPerSecond;
@@ -313,7 +254,7 @@ export class Visualisation {
     canvas.addEventListener(
       "mousedown",
       createCanvasMouseDownListener({
-        area: area,
+        area,
         areaPainter: this.areaPainter,
       })
     );
@@ -369,9 +310,10 @@ export class Visualisation {
 }
 
 export const main = () => {
-  const canvas = querySelectorOrThrow(".area") as HTMLCanvasElement;
+  const canvas = querySelectorOrThrow(".area");
 
   const visualisation = new Visualisation({
+    canvas,
     area: new Area({
       width: 80,
       height: 40,
@@ -382,13 +324,11 @@ export const main = () => {
         { x: 1, y: 2 },
         { x: 2, y: 2 },
         { x: 2, y: 1 },
-        { x: 1, y: 0 }
-      ]
+        { x: 1, y: 0 },
+      ],
     }),
-    canvas
   });
   visualisation.play();
 };
 
 main();
-
