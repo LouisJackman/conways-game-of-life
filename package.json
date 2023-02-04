@@ -2,10 +2,9 @@
   "name": "conways-game-of-life",
   "version": "1.0.1",
   "description": "A in-browser implementation of Conway's Game of Life.",
-  "main": "main.js",
+  "browser": "main.js",
   "scripts": {
     "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1",
     "publish": "npm run build && tar -cJf conways-game-of-life.tar.xz index.html main.js style.css"
   },
   "repository": {
@@ -13,7 +12,7 @@
     "url": "git+https://gitlab.com/louis.jackman/conways-game-of-life.git"
   },
   "author": "Louis Jackman",
-  "license": "MIT",
+  "license": "AGPL-3.0-or-later",
   "bugs": {
     "url": "https://gitlab.com/louis.jackman/conways-game-of-life/-/issues"
   },
