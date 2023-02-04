@@ -56,7 +56,7 @@ export class Area {
     height,
     cellWidth,
     cellHeight,
-    initialCells
+    initialCells,
   }: AreaArgs) {
     this.width = width;
     this.height = height;
@@ -90,9 +90,7 @@ export class Area {
 
   isAlive({ x, y }: Position) {
     const row = this.#areaRows[y];
-    return (row === undefined)
-      ? unreachable()
-      : row[x];
+    return row === undefined ? unreachable() : row[x];
   }
 
   amountOfNeighbours({ x, y }: Position) {
@@ -270,17 +268,16 @@ type CreateCanvasMouseDownListenerArgs = {
   readonly areaPainter: AreaPainter;
 };
 
-export const createCanvasMouseDownListener = ({
-  area,
-  areaPainter,
-}: CreateCanvasMouseDownListenerArgs) => (event: MouseEvent) => {
-  const x = Math.floor(event.offsetX / area.cellWidth);
-  const y = Math.floor(event.offsetY / area.cellHeight);
+export const createCanvasMouseDownListener =
+  ({ area, areaPainter }: CreateCanvasMouseDownListenerArgs) =>
+  (event: MouseEvent) => {
+    const x = Math.floor(event.offsetX / area.cellWidth);
+    const y = Math.floor(event.offsetY / area.cellHeight);
 
-  const position = { x, y };
-  area.spawn(position);
-  areaPainter.paintTile(position);
-};
+    const position = { x, y };
+    area.spawn(position);
+    areaPainter.paintTile(position);
+  };
 
 type VisualisationArgs = {
   readonly area: Area;
@@ -304,7 +301,7 @@ export class Visualisation {
 
     this.areaPainter = new AreaPainter({
       area,
-      context: getContext(canvas)
+      context: getContext(canvas),
     });
 
     this.steps = stepsPerSecond;
@@ -382,13 +379,12 @@ export const main = () => {
         { x: 1, y: 2 },
         { x: 2, y: 2 },
         { x: 2, y: 1 },
-        { x: 1, y: 0 }
-      ]
+        { x: 1, y: 0 },
+      ],
     }),
-    canvas
+    canvas,
   });
   visualisation.play();
 };
 
 main();
-
