@@ -5,7 +5,8 @@
   "main": "main.js",
   "scripts": {
     "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "publish": "npm run build && tar -cJf conways-game-of-life.tar.xz index.html main.js style.css"
   },
   "repository": {
     "type": "git",
