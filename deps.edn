@@ -1,0 +1,4 @@
+{:paths ["src" "target" "resources"]
+ :deps {org.clojure/clojurescript {:mvn/version "1.12.42"}
+        com.bhauman/figwheel-main {:mvn/version "0.2.20"}
+        com.bhauman/rebel-readline-cljs {:mvn/version "0.1.4"}}}

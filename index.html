@@ -1,4 +1,10 @@
 <!DOCTYPE html>
+<!--
+    Declare metadata for public hosting, e.g. a description and
+    keywords. Leave the actual game UI to be dynamically built atop `#app` by
+    the ClojureScript program upon initialisation. That's as it would be in a
+    local development environment without an `index.html`, e.g. via Figwheel.
+-->
 <html>
   <head>
     <meta charset="UTF-8">
@@ -11,45 +17,9 @@
         content="conways game of life, conway's game of life">
     <meta name="robots" content="NOFOLLOW">
     <title>Conway's Game of Life</title>
-    <link rel="stylesheet" href="style.css">
-    <script defer type="module" src="main.js"></script>
-    <script defer nomodule src="main.js"></script>
   </head>
   <body>
-    <h1>Conway's Game of Life</h1>
-    <noscript>
-      <p class="info">
-        JavaScript wasn't detected yet is needed to run, specifically
-        ECMAScript 6th Edition.
-      </p>
-    </noscript>
-    <p class="info">
-      Clicking a cell changes its state: dead to alive, alive to dead. The
-      simulation often kills cells as soon as they're spawned, so try pausing
-      whilst doing it.
-    </p>
-    <p class="info">
-      This simulation is entirely client-side; saving the page allows offline
-      use.
-    </p>
-    <hr>
-    <table class="controls">
-      <tr class="play-pause">
-        <td class="status"></td>
-        <td></td>
-        <td><button class="change"></button></td>
-      </tr>
-      <tr class="steps-per-second">
-        <td class="status"></td>
-        <td><input></input></td>
-        <td><button class="update">Update</button></td>
-      </tr>
-    </table>
-    <canvas class="area" width="600" height="400">
-      <p class="warning">
-        HTML5 Canvas support is required, but is not supported.
-      </p>
-    </canvas>
+    <main id="app"></main>
+    <script src="out/main.js"></script>
   </body>
 </html>
-
