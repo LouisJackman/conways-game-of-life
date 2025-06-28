@@ -1,12 +1,19 @@
-# You can override the included template(s) by including variable overrides
-# See https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
-# Note that environment variables can be set in several places
-# See https://docs.gitlab.com/ee/ci/variables/#priority-of-environment-variables
-stages:
-- test
-sast:
-  variables:
-    SAST_DEFAULT_ANALYZERS: eslint
-  stage: test
-include:
-- template: Security/SAST.gitlab-ci.yml
+build:
+  image: docker:28.2.2
+  stage: build
+  services:
+    - docker:28.2.2-dind
+  script:
+
+    # Build
+    - docker build -t conways-game-of-life-builder --load .
+    - docker run --rm -v "$PWD:/home/user/workspace" conways-game-of-life-builder
+    - docker rmi conways-game-of-life-builder
+
+    # Create Artefact
+    - cd site && tar -Jcf conways-game-of-life.tar.xz . && mv conways-game-of-life.tar.xz ../
+
+  artifacts:
+    paths:
+      - conways-game-of-life.tar.xz
+
