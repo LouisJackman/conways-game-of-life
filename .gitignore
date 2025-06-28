@@ -1,5 +1,7 @@
+*.tar.xz
 .cpcache
 .nrepl-port
 .rebel_readline_history
 out
+site
 target
