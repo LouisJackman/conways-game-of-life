@@ -11,7 +11,10 @@ build:
     - docker rmi conways-game-of-life-builder
 
     # Create Artefact
-    - cd site && tar -Jcf conways-game-of-life.tar.xz . && mv conways-game-of-life.tar.xz ../
+    - mkdir site
+    - mv index.html out/main.js site
+    - cd site && tar -Jcf conways-game-of-life.tar.xz .
+    - mv site/conways-game-of-life.tar.xz ./
 
   artifacts:
     paths:
