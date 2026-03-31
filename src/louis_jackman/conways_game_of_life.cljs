@@ -138,8 +138,16 @@
           area
           cells-to-set))
 
-(def ^:private default-area-width 60)
-(def ^:private default-area-height 40)
+(def ^:private default-cell-pixel-width 10)
+(def ^:private default-cell-pixel-height 10)
+
+(def ^:private default-canvas-pixel-width 600)
+(def ^:private default-canvas-pixel-height 400)
+
+(def ^:private default-area-width (/ default-canvas-pixel-width
+                                    default-cell-pixel-width))
+(def ^:private default-area-height (/ default-canvas-pixel-height
+                                     default-cell-pixel-height))
 
 (defn area-with-starting-cells
   "Create a new area with initial cells, e.g. a starting glider."
@@ -232,12 +240,6 @@
 
 ;; Canvas Drawing for the Base Visualisation
 
-(def ^:private default-cell-pixel-width 10)
-(def ^:private default-cell-pixel-height 10)
-
-(def ^:private default-canvas-pixel-width 600)
-(def ^:private default-canvas-pixel-height 400)
-
 (def cell-fill-styles
   {alive-cell "white"
    dead-cell "black"})
@@ -298,11 +300,11 @@
         steps-per-second-button-on-click
         (fn [event]
           (let [str-value (.-value steps-per-second-input)]
-            (-> str-value
-                parse-long
-                on-steps-per-second-change)
-            (set! (.-textContent steps-per-second-label-text)
-                  (str "Running at " str-value " steps per second."))))
+            (when-let [parsed (parse-long str-value)]
+              (let [clamped (max 1 (min parsed 60))]
+                (on-steps-per-second-change clamped)
+                (set! (.-textContent steps-per-second-label-text)
+                      (str "Running at " clamped " steps per second."))))))
 
         steps-per-second-button
         (doto (elem "button" :type "button")
