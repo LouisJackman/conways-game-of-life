@@ -52,7 +52,7 @@ WORKDIR /home/user/workspace
 #
 
 RUN <<-EOF
-    curl -LOSfs https://github.com/clojure/brew-install/releases/latest/download/linux-install.sh
+    curl -LOSfs https://github.com/clojure/brew-install/releases/download/1.12.4.1618/linux-install.sh
     chmod +x linux-install.sh
     mkdir -p ~/.local/clojure
     ./linux-install.sh --prefix "$HOME/.local/clojure"
