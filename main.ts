@@ -203,11 +203,14 @@ export const setupControls = (visualisation: Visualisation) => {
   stepsPerSecondControlsStatus.appendChild(stepsPerSecondInputText);
 
   stepsPerSecondButton.addEventListener("click", () => {
-    const input = +stepsPerSecondInput.value;
+    const parsedInput = Number.parseInt(stepsPerSecondInput.value, 10);
 
     stepsPerSecondInput.value = "";
-    visualisation.stepsPerSecond = input;
-    stepsPerSecondInputText.nodeValue = `Running at ${input} Steps per Seconds`;
+    if (!Number.isNaN(parsedInput)) {
+      const stepsPerSecond = Math.max(1, Math.min(parsedInput, 60));
+      visualisation.stepsPerSecond = stepsPerSecond;
+      stepsPerSecondInputText.nodeValue = `Running at ${stepsPerSecond} steps per second.`;
+    }
   });
 };
 
@@ -367,13 +370,15 @@ export class Visualisation {
 
 export const main = () => {
   const canvas = querySelectorOrThrow(".area") as HTMLCanvasElement;
+  const cellWidth = 10;
+  const cellHeight = 10;
 
   const visualisation = new Visualisation({
     area: new Area({
-      width: 80,
-      height: 40,
-      cellWidth: 10,
-      cellHeight: 10,
+      width: Math.floor(canvas.width / cellWidth),
+      height: Math.floor(canvas.height / cellHeight),
+      cellWidth,
+      cellHeight,
       initialCells: [
         { x: 0, y: 2 },
         { x: 1, y: 2 },
