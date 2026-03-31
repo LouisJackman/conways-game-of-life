@@ -286,7 +286,7 @@
                             (.addEventListener "click"
                                                play-pause-button-on-click))
         play-pause-spacer (elem "span")
-        play-pause-label-text (text "The simulation is paused.")
+        play-pause-label-text (text "The simulation is playing.")
         play-pause-label (elem "label")
 
         steps-per-second-input (elem "input"
