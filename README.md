@@ -58,3 +58,6 @@ appear, in which you can dynamically modify the simulation at runtime.
 - [ ] Visualise hovering over cells with a mouse.
 - [ ] Migrate keyword and variadic arguments to more overloaded positional arguments, to see if it
       aids performance.
+- [ ] Ensure direct linking is in effect.
+- [ ] Warn on reflection after all `ns` declarations.
+- [ ] Do primitive numeric type hinting in hotspots, such as neighbour-cell checks.
