@@ -296,7 +296,7 @@ export class Visualisation {
   steps: number;
   milisecondIntervalCount: number;
   isRunning: boolean;
-  stepIntervalId?: number;
+  stepIntervalId?: ReturnType<typeof setInterval>;
 
   constructor({ area, canvas, stepsPerSecond = 4 }: VisualisationArgs) {
     this.area = area;
@@ -392,4 +392,6 @@ export const main = () => {
   visualisation.play();
 };
 
-main();
+if (typeof document !== "undefined") {
+  main();
+}
