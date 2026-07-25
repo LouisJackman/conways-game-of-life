@@ -1,12 +1,12 @@
-# You can override the included template(s) by including variable overrides
-# See https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
-# Note that environment variables can be set in several places
-# See https://docs.gitlab.com/ee/ci/variables/#priority-of-environment-variables
-stages:
-- test
-sast:
-  variables:
-    SAST_DEFAULT_ANALYZERS: eslint
-  stage: test
-include:
-- template: Security/SAST.gitlab-ci.yml
+build:
+  image: node:22-bookworm
+  stage: build
+  before_script:
+    - apt-get update
+    - apt-get install --yes --no-install-recommends xz-utils
+  script:
+    - npm ci
+    - npm run publish
+  artifacts:
+    paths:
+      - conways-game-of-life.tar.xz
