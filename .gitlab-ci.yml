@@ -1,3 +1,8 @@
+stages:
+  - test
+  - build
+  - release
+
 build:
   image: node:22-bookworm
   stage: build
@@ -10,3 +15,28 @@ build:
   artifacts:
     paths:
       - conways-game-of-life.tar.xz
+
+release:
+  image: node:22-bookworm
+  stage: release
+  needs:
+    - job: build
+      artifacts: true
+  rules:
+    - if: '$CI_COMMIT_TAG && $CI_COMMIT_REF_PROTECTED == "true"'
+  script:
+    - apt-get update
+    - apt-get install --yes --no-install-recommends ca-certificates curl
+    - curl --fail --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file conways-game-of-life.tar.xz "$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/generic/$CI_PROJECT_NAME/$CI_COMMIT_TAG/conways-game-of-life.tar.xz"
+  release:
+    tag_name: $CI_COMMIT_TAG
+    name: Release $CI_COMMIT_TAG
+    description: Automated release of $CI_COMMIT_TAG.
+    assets:
+      links:
+        - name: conways-game-of-life.tar.xz
+          url: "$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/generic/$CI_PROJECT_NAME/$CI_COMMIT_TAG/conways-game-of-life.tar.xz"
+          direct_asset_path: /projects/conways-game-of-life.tar.xz
+
+include:
+  - template: Jobs/SAST.gitlab-ci.yml
