@@ -1,6 +1,6 @@
 {
   "name": "conways-game-of-life",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A in-browser implementation of Conway's Game of Life.",
   "browser": "main.js",
   "scripts": {
