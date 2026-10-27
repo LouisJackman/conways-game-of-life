@@ -1,9 +1,10 @@
 # conways-game-of-life - AI Coding Agent Instructions
 
-Canonical instructions for AI coding agents working in this repository. Tool-specific entrypoints symlink to this file where supported:
-- `CLAUDE.md`
-- `.cursorrules`
-- `.github/copilot-instructions.md`
+`AGENTS.md` is the single source of truth for AI coding agents working in this
+repository. The only compatibility entrypoint is
+`.github/copilot-instructions.md`, for Copilot surfaces that do not read
+`AGENTS.md` natively. Do not add `CLAUDE.md` or `.cursorrules`; Claude Code and
+Cursor read `AGENTS.md`.
 
 ## Build & Run
 
@@ -69,7 +70,10 @@ Managed in `package.json` and locked in `package-lock.json`:
 
 ## CI
 
-GitLab CI (`.gitlab-ci.yml`) installs dependencies with `npm ci`, runs `npm run publish`, and retains `conways-game-of-life.tar.xz` as an artifact.
+GitLab CI (`.gitlab-ci.yml`) installs dependencies with `npm ci`, runs
+`npm run publish`, and retains `conways-game-of-life.tar.xz` as an artifact. A
+release job publishes the archive for protected tags, and the pipeline includes
+the GitLab SAST template. There is no separate test job.
 
 ## Licence
 
